@@ -8,6 +8,7 @@ public class ResourceManager {
     private Dictionary<string, Sprite> _sprites = new();
     private Dictionary<string, GameObject> _prefabs = new();
     private Dictionary<string, TextAsset> _jsonData = new();
+    private Dictionary<string, RuntimeAnimatorController> _animControllers = new();
 
     public void Initialize() {
         Sprite[] sprites = Resources.LoadAll<Sprite>("Sprites/Items");
@@ -22,6 +23,10 @@ public class ResourceManager {
         TextAsset[] texts = Resources.LoadAll<TextAsset>("JsonData");
         foreach (TextAsset t in texts) {
             _jsonData.Add(t.name, t);
+        }
+        RuntimeAnimatorController[] controllers = Resources.LoadAll<RuntimeAnimatorController>("Animations");
+        foreach (RuntimeAnimatorController controller in controllers) {
+            _animControllers.Add(controller.name, controller);
         }
     }
 
@@ -47,6 +52,13 @@ public class ResourceManager {
             return null;
         }
         return data;
+    }
+    public RuntimeAnimatorController LoadAnimController(string key) {
+        if (!_animControllers.TryGetValue(key, out RuntimeAnimatorController controller)) {
+            Debug.LogError($"[ResourceManager] LoadJsonData({key}): Failed to load animController.");
+            return null;
+        }
+        return controller;
     }
 
     public GameObject Instantiate(string key, Transform parent = null, bool pooling = false) {

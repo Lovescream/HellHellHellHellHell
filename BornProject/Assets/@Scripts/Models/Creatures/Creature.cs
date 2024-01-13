@@ -5,11 +5,9 @@ using UnityEngine;
 
 public class Creature : Entity {
 
-    public CreatureData Data { get; protected set; }
+    #region Properties
 
-    public float hpMax = 0;
-    public float damage = 0;
-    public float defense = 0;
+    public CreatureData Data { get; protected set; }
 
     public float Hp {
         get => _hp;
@@ -28,23 +26,56 @@ public class Creature : Entity {
         }
     }
 
-    private float _hp;
-    private SpriteRenderer _spriter;
+    public Vector2 Velocity { get; protected set; }
+    public Vector2 LookDirection { get; protected set; }
 
+    #endregion
+
+    #region Inspector (TEMP)
+
+    public float hpMax = 0;
+    public float damage = 0;
+    public float defense = 0;
+
+    #endregion
+
+    #region Fields
+
+    // Status / State.
+    private float _hp;
+
+    // Components.
+    private SpriteRenderer _spriter;
+    private Animator _animator;
+    private Rigidbody2D _rigidbody;
+    private Collider2D _collider;
+
+    // Callbacks.
     public event Action<float> OnChangedHp;
 
-    void Update() {
-        if (Input.GetKeyDown(KeyCode.A)) {
-            Hp -= 10;
-        }
+    #endregion
+
+    #region MonoBehaviours
+
+    protected virtual void FixedUpdate() {
+        _rigidbody.velocity = Velocity;
+        _animator.SetFloat("Speed", Velocity.magnitude);
+        _spriter.flipX = LookDirection.x < 0;
     }
+
+    #endregion
+
+    #region Initialize / Set
 
     public override bool Initialize() {
         if (!base.Initialize()) return false;
 
-        OnChangedHp += OnChangeHp;
-
         _spriter = this.GetComponent<SpriteRenderer>();
+        _animator = this.GetComponent<Animator>();
+        _rigidbody = this.GetComponent<Rigidbody2D>();
+        _collider = this.GetComponent<Collider2D>();
+
+        OnChangedHp += OnChangeHp;
 
         return true;
     }
@@ -54,17 +85,23 @@ public class Creature : Entity {
 
         Data = data;
 
+        _animator.runtimeAnimatorController = Main.Resource.LoadAnimController($"{Data.Key}");
+        _animator.SetBool("Dead", false);
+
         hpMax = data.HpMax;
         damage = data.Damage;
         defense = data.Defense;
 
-        if (hpMax < 150) _spriter.sprite = Main.Resource.LoadSprite("SilverSword");
-
         Hp = hpMax;
     }
+
+    #endregion
+
+    #region Callbacks
 
     private void OnChangeHp(float hp) {
         Debug.Log($"ÇöÀç Hp´Â: {hp}");
     }
 
+    #endregion
 }
